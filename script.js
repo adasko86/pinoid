@@ -2,7 +2,7 @@
 const ctx = canva.getContext('2d');
 
 
- 
+
 //rozmiar canvy
 canva.height = 800;
 canva.width = 700;
