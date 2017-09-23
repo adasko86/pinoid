@@ -5,18 +5,20 @@ const ctx = canva.getContext('2d');
 
 //rozmiar canvy
 canva.height = 800;
-canva.width = 700;
+canva.width = 900;
 
-//rozmiar paletki
-const paddleH = 20;
-const paddleW = 120;
+////rozmiar paletki
+//const paddleH = 20;
+//const paddleW = 120;
 
-//pozycja paletek
-let playerX = canva.width / 2 - paddleW / 2;
-const playerY = 760;
+////pozycja paletek
+//let playerX = canva.width / 2 - paddleW / 2;
+//const playerY = 760;
+
+let playerRect = new Panel(canva.width / 2 - 120 / 2, 760, 120, 20, "green");
 
 //rozmiar canvy
-const canvaW = canva.width;
+const canvaW = canva.width - 200;
 const canvaH = canva.height;
 
 //rozmiar piłki
@@ -28,14 +30,17 @@ let ballX = canvaW / 2 - ballSize / 2;
 let ballY = canvaH / 2 - ballSize / 2;
 
 //prędkość piłki
-let ballSpeedX = 2;
-let ballSpeedY = 2;
+let ballSpeedX = 4;
+let ballSpeedY = 4;
+
+//ilość kul
+let ballCount = 3;
 
 //tablica elementów do zbicia
 var rectArray = null;
 
 //ukrywanie kursora, żeby nie był widoczny na canvie
-document.getElementById('can').style.cursor = "none";
+//document.getElementById('can').style.cursor = "none";
 
 var circle = {
     x: ballX,
@@ -66,8 +71,18 @@ function drawBall() {
     ballY += ballSpeedY;
     ballX += ballSpeedX;
 
-    if (ballY <= 0 || ballY + ballSize >= canvaH) {
+    if (ballY <= 0) {
         ballSpeedY = -ballSpeedY;
+    }
+    else if (ballY + ballSize >= canvaH) {
+        //console.log("wwwwww");
+        ballSpeedY = -ballSpeedY;
+        ballCount -= 1;
+        if (ballCount == 0) {
+            //alert("Przegrałeś");
+            drawTableRight();
+            stop = true;
+        }
     }
     if (ballX <= 0) {
         ballSpeedX = -ballSpeedX;
@@ -117,6 +132,17 @@ function drawRect() {
     }
 }
 
+var ColorEnum = Object.freeze({
+    "green": 60,
+    "red": 50,
+    "yellow": 40,
+    "blue": 30,
+    "purple": 20,
+    "pink": 10
+})
+
+var points = 0;
+
 //rysowanie stołu i lini środkowej
 function drawTable() {
     //rysujemy stół
@@ -124,42 +150,114 @@ function drawTable() {
     ctx.fillRect(0, 0, canvaW, canvaH);
 }
 
+//rysowanie stołu i lini środkowej
+function drawTableRight() {
+    //rysujemy stół
+    ctx.fillStyle = 'gray';
+    ctx.fillRect(canvaW, 0, 200, canvaH);
+
+    ctx.fillStyle = 'white';
+    ctx.font = "30px Arial";
+    ctx.fillText("Punkty:", canvaW + 20, 50);
+    ctx.fillText(points, canvaW + 20, 80);
+    ctx.fillText("Poziom:", canvaW + 20, 130);
+    ctx.fillText("1", canvaW + 20, 160);
+    ctx.fillText("Kule:", canvaW + 20, 210);
+    if (ballCount == 3) {
+
+        ctx.beginPath();
+        ctx.arc(canvaW + 30, 230, radius, 0, 2 * Math.PI, false);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(canvaW + 60, 230, radius, 0, 2 * Math.PI, false);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(canvaW + 90, 230, radius, 0, 2 * Math.PI, false);
+        ctx.fill();
+    }
+    else if (ballCount == 2) {
+
+        ctx.beginPath();
+        ctx.arc(canvaW + 30, 230, radius, 0, 2 * Math.PI, false);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(canvaW + 60, 230, radius, 0, 2 * Math.PI, false);
+        ctx.fill();
+    }
+    else if (ballCount == 1) {
+
+        ctx.beginPath();
+        ctx.arc(canvaW + 30, 230, radius, 0, 2 * Math.PI, false);
+        ctx.fill();
+    }
+}
+
 //rysowanie paletki gracza
 function drawPaddlePlayer() {
     ctx.fillStyle = 'lightgreen';
-    ctx.fillRect(playerX, playerY, paddleW, paddleH);
+    ctx.fillRect(playerRect.position.X, playerRect.position.Y, playerRect.size.width, playerRect.size.height);
 }
 
 canva.addEventListener("mousemove", playserPositon);
 function playserPositon(event) {
-    playerX = event.clientX - canva.offsetLeft - paddleW / 2;
+    playerRect.position.X = event.clientX - canva.offsetLeft - playerRect.size.width / 2;
 
     //jeżeli paletka chce wyjechać za canve od dołu ustawiamy wysokość na (canvaH - paddleH)
-    if (playerX >= canvaW - paddleW) {
-        playerX = canvaW - paddleW;
+    if (playerRect.position.X >= canvaW - playerRect.size.width) {
+        playerRect.position.X = canvaW - playerRect.size.width;
     }
 
     //jeżeli paletka chce wyjechać za canve od góry usatwiamy wysokość na 0
-    if (playerX <= 0) {
-        playerX = 0;
+    if (playerRect.position.X <= 0) {
+        playerRect.position.X = 0;
     }
 }
 var stop = false;
 function game() {
     if (!stop) {
         drawTable();
+        drawTableRight();
         drawBall();
         drawRect();
         drawPaddlePlayer();
+        detectCollision();
+    }
+}
 
-        for (var i = 0; i < rectArray.length; i++) {
-            for (var j = 0; j < rectArray[i].length; j++) {
-                if (rectArray[i][j].Visibility) {
-                    rectArray[i][j].Visibility = !collisionCheckCircleRect(circle, rectArray[i][j]);
+function detectCollision() {
+    let anyVisible = false;
+    for (var i = 0; i < rectArray.length; i++) {
+        for (var j = 0; j < rectArray[i].length; j++) {
+            if (rectArray[i][j].Visibility) {
+                anyVisible = true;
+                rectArray[i][j].Visibility = !collisionCheckCircleRect(circle, rectArray[i][j]);
+                if(!rectArray[i][j].Visibility)
+                {
+                    if (rectArray[i][j].color == arrayColors[0])
+                    { points += ColorEnum.green;}
+                    else if (rectArray[i][j].color == arrayColors[1])
+                    { points += ColorEnum.red; }
+                    else if (rectArray[i][j].color == arrayColors[2])
+                    { points += ColorEnum.yellow; }
+                    else if (rectArray[i][j].color == arrayColors[3])
+                    { points += ColorEnum.blue; }
+                    else if (rectArray[i][j].color == arrayColors[4])
+                    { points += ColorEnum.purple; }
+                    else if (rectArray[i][j].color == arrayColors[5])
+                    { points += ColorEnum.pink; }
+
                 }
-
             }
         }
+    }
+    collisionCheckCircleRect(circle, playerRect);
+
+    //anyVisible - jeśli ustawione na false, oznacza to ze żaden element nie jest już widoczny (zwycięstwo gracza)
+    if (!anyVisible) {
+        stop = true;
     }
 }
 
@@ -188,12 +286,12 @@ function collisionCheckCircleRect(circle, rect) {
 
     if (distX <= (rect.size.width / 2)) {
         ballSpeedY = -ballSpeedY;
-        console.log("a");
+        //console.log("a");
         return true;
     }
     if (distY <= (rect.size.height / 2)) {
         ballSpeedX = -ballSpeedX;
-        console.log("b");
+        //console.log("b");
         return true;
     }
 
