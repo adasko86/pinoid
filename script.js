@@ -31,6 +31,9 @@ let ballY = canvaH / 2 - ballSize / 2;
 let ballSpeedX = 2;
 let ballSpeedY = 2;
 
+//tablica elementów do zbicia
+var rectArray = null;
+
 //ukrywanie kursora, żeby nie był widoczny na canvie
 document.getElementById('can').style.cursor = "none";
 
@@ -41,16 +44,16 @@ var circle = {
 };
 
 var rect = {
-    x: 0,
-    y: 0,
-    w: 500,
-    h: 300
+    x: 50,
+    y: 50,
+    w: 60,
+    h: 20
 };
 
 //rysowanie piłki
 function drawBall() {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(ballX, ballY, ballSize, ballSize);
+    //ctx.fillStyle = 'white';
+    //ctx.fillRect(ballX, ballY, ballSize, ballSize);
 
 
     ctx.beginPath();
@@ -74,12 +77,44 @@ function drawBall() {
     }
     circle.x = ballX;
     circle.y = ballY;
+}
+
+let arrayColors = new Array("green", "red", "yellow", "blue", "purple", "pink");
+
+//
+function createArray(h, w) {
+    var arr = new Array(h);
+    //i = arr.length;
+
+    if (arr.length > 1) {
+        for (var i = 0; i < arr.length; i++) {
+            arr[i] = new Array(w);
+            for (var j = 0; j < arr[i].length; j++) {
+                let p = new Panel(rect.w * j + rect.y, rect.h * i + rect.x, rect.w, rect.h, arrayColors[i]);
+                arr[i][j] = p;
+            }
+        }
+    }
+
+    return arr;
+}
 
 
-    ctx.strokeStyle = "white";
-    ctx.stroke();
-    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+//funkcja rysująca panele na stole
+function drawRect() {
+    for (var i = 0; i < rectArray.length; i++) {
+        for (var j = 0; j < rectArray[i].length; j++) {
+            let p = rectArray[i][j];
+            if (p.Visibility) {
+                ctx.strokeStyle = "white";
+                ctx.fillStyle = p.color;
+                ctx.stroke();
+                ctx.fillRect(p.position.X, p.position.Y, p.size.width, p.size.height);
+                ctx.strokeRect(p.position.X, p.position.Y, p.size.width, p.size.height);
+            }
 
+        }
+    }
 }
 
 //rysowanie stołu i lini środkowej
@@ -114,12 +149,22 @@ function game() {
     if (!stop) {
         drawTable();
         drawBall();
+        drawRect();
         drawPaddlePlayer();
 
-        stop = collisionCheckCircleRect(circle, rect);
+        for (var i = 0; i < rectArray.length; i++) {
+            for (var j = 0; j < rectArray[i].length; j++) {
+                if (rectArray[i][j].Visibility) {
+                    rectArray[i][j].Visibility = !collisionCheckCircleRect(circle, rectArray[i][j]);
+                }
+
+            }
+        }
     }
 }
 
+rectArray = createArray(6, 10);
+//drawRect();
 setInterval(game, 1000 / 100);
 
 //początek gry
@@ -130,50 +175,51 @@ function startgame(difficult) {
 
 //funkcja sprawdzająca kolizje
 function collisionCheckCircleRect(circle, rect) {
-    var distX = Math.abs(circle.x + 10 - rect.x - rect.w / 2);
-    var distY = Math.abs(circle.y + 10 - rect.y - rect.h / 2);
 
-    if (distX > (rect.w / 2 + circle.r)) {
+    var distX = Math.abs(circle.x + 10 - rect.position.X - rect.size.width / 2);
+    var distY = Math.abs(circle.y + 10 - rect.position.Y - rect.size.height / 2);
+
+    if (distX > (rect.size.width / 2 + circle.r)) {
         return false;
     }
-    if (distY > (rect.h / 2 + circle.r)) {
+    if (distY > (rect.size.height / 2 + circle.r)) {
         return false;
     }
 
-    if (distX <= (rect.w / 2)) {
+    if (distX <= (rect.size.width / 2)) {
+        ballSpeedY = -ballSpeedY;
+        console.log("a");
         return true;
     }
-    if (distY <= (rect.h / 2)) {
+    if (distY <= (rect.size.height / 2)) {
+        ballSpeedX = -ballSpeedX;
+        console.log("b");
         return true;
     }
 
-    var dx = distX - rect.w / 2;
-    var dy = distY - rect.h / 2;
+    var dx = distX - rect.size.width / 2;
+    var dy = distY - rect.size.height / 2;
     return (dx * dx + dy * dy <= (circle.r * circle.r));
 }
 
-//funkcja rysująca panele na stole
-function paintPanel() {
-
-}
-
 //klasa reprezentująca obiekt panelu, który ma zostać "zniszczony" przez piłkę
-function Panel() {
-    this.position = new point();
-    this.size = new size();
-    this.color = "#FF0000";
+function Panel(x, y, width, height, color) {
+    this.position = new _point(x, y);
+    this.size = new _size(width, height);
+    this.color = color;
     this.hardnessDegree = 1;
     this.actualHardnessDegree = 1;
+    this.Visibility = true;
 }
 
 //class tell us where is start point of element
-function point() {
-    this.X = 0;
-    this.Y = 0;
+function _point(x, y) {
+    this.X = x;
+    this.Y = y;
 }
 
 //class tell us what size have element
-function size() {
-    this.width = 0;
-    this.height = 0;
+function _size(width, height) {
+    this.width = width;
+    this.height = height;
 }
