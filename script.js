@@ -1,21 +1,15 @@
 ﻿const canva = document.getElementById('can');
 const ctx = canva.getContext('2d');
 
-
-
 //rozmiar canvy
 canva.height = 800;
 canva.width = 900;
 
-////rozmiar paletki
-//const paddleH = 20;
-//const paddleW = 120;
-
-////pozycja paletek
-//let playerX = canva.width / 2 - paddleW / 2;
-//const playerY = 760;
-
+//paletka użytkownika
 let playerRect = new Panel(canva.width / 2 - 120 / 2, 760, 120, 20, "green");
+
+//paletka użytkownika
+let mousePosition = new Panel(canva.width / 2 - 120 / 2, 760, 120, 20, "green");
 
 //rozmiar canvy
 const canvaW = canva.width - 200;
@@ -39,15 +33,20 @@ let ballCount = 3;
 //tablica elementów do zbicia
 var rectArray = null;
 
-//ukrywanie kursora, żeby nie był widoczny na canvie
+//tablica punktów do pokazania na stole
+var rectPointArray = new Array(0);
+
+////ukrywanie kursora, żeby nie był widoczny na canvie
 //document.getElementById('can').style.cursor = "none";
 
+//piłeczka
 var circle = {
     x: ballX,
     y: ballY,
     r: radius
 };
 
+//położenie pierwszego elementu
 var rect = {
     x: 50,
     y: 50,
@@ -55,17 +54,37 @@ var rect = {
     h: 20
 };
 
+//zmienna, gdy ustawiona na true oznacza zatrzymanie gry z jakiegoś powodu np. zwycięstwa/przegranej
+var stop = true;
+
+//zmienna, gdy ustawiona na true oznacza włączenie pierwszego ekranu
+var firstScreen = true;
+
+//lista kolorów jakie posiadają elementy
+let arrayColors = new Array("green", "red", "yellow", "blue", "purple", "pink");
+
+//słownik (nazwa koloru/ilość punktów) - chyba do zmiany
+var ColorEnum = Object.freeze({
+    "green": 60,
+    "red": 50,
+    "yellow": 40,
+    "blue": 30,
+    "purple": 20,
+    "pink": 10
+})
+
+//liczba punktów zdobytych przez użytkownika
+var points = 0;
+
+//tworzenie tablicy dwuwymiariwej z prostokątami do zbicia
+rectArray = createArray(6, 10);
+
 //rysowanie piłki
 function drawBall() {
-    //ctx.fillStyle = 'white';
-    //ctx.fillRect(ballX, ballY, ballSize, ballSize);
-
-
     ctx.beginPath();
 
     ctx.arc(ballX + 10, ballY + 10, radius, 0, 2 * Math.PI, false);
-    //ctx.arc(circle.x, circle.y, circle.r, 0, Math.PI * 2);
-    ctx.fillStyle = 'green';
+    ctx.fillStyle = 'white';
     ctx.fill();
 
     ballY += ballSpeedY;
@@ -75,7 +94,6 @@ function drawBall() {
         ballSpeedY = -ballSpeedY;
     }
     else if (ballY + ballSize >= canvaH) {
-        //console.log("wwwwww");
         ballSpeedY = -ballSpeedY;
         ballCount -= 1;
         if (ballCount == 0) {
@@ -94,12 +112,9 @@ function drawBall() {
     circle.y = ballY;
 }
 
-let arrayColors = new Array("green", "red", "yellow", "blue", "purple", "pink");
-
-//
+//funkcja tworzy tablicę dwuwymiarową elementów, które należy zbić
 function createArray(h, w) {
     var arr = new Array(h);
-    //i = arr.length;
 
     if (arr.length > 1) {
         for (var i = 0; i < arr.length; i++) {
@@ -110,10 +125,8 @@ function createArray(h, w) {
             }
         }
     }
-
     return arr;
 }
-
 
 //funkcja rysująca panele na stole
 function drawRect() {
@@ -122,46 +135,56 @@ function drawRect() {
             let p = rectArray[i][j];
             if (p.Visibility) {
                 ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
                 ctx.fillStyle = p.color;
-                ctx.stroke();
-                ctx.fillRect(p.position.X, p.position.Y, p.size.width, p.size.height);
-                ctx.strokeRect(p.position.X, p.position.Y, p.size.width, p.size.height);
+                //ctx.stroke();
+
+                roundRect(ctx, p.position.X, p.position.Y, p.size.width, p.size.height, 8, true);
+                //ctx.fillRect(p.position.X, p.position.Y, p.size.width, p.size.height);
+                //ctx.strokeRect(p.position.X, p.position.Y, p.size.width, p.size.height);
             }
 
         }
     }
 }
+// Create gradient
+grd = ctx.createLinearGradient(0.000, 0.000, canvaW, canvaH);
 
-var ColorEnum = Object.freeze({
-    "green": 60,
-    "red": 50,
-    "yellow": 40,
-    "blue": 30,
-    "purple": 20,
-    "pink": 10
-})
+// Add colors
+grd.addColorStop(0.000, 'rgba(178, 178, 178, 1.000)');
+grd.addColorStop(0.998, 'rgba(0, 0, 0, 0.792)');
 
-var points = 0;
+
+let winPath = ['m197.084991,305.50278l25.973885,0l8.02613,-22.918036l8.026135,22.918036l25.973881,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm196.084991,153.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm311.084991,229.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm427.084991,306.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm312.084991,383.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm425.084991,152.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z'];
 
 //rysowanie stołu i lini środkowej
 function drawTable() {
-    //rysujemy stół
-    ctx.fillStyle = 'black';
+
+    // Fill with gradient
+    ctx.fillStyle = grd;
     ctx.fillRect(0, 0, canvaW, canvaH);
 }
 
 //rysowanie stołu i lini środkowej
 function drawTableRight() {
-    //rysujemy stół
+    //rysujemy "menu" po prawej stronie stołu
     ctx.fillStyle = 'gray';
     ctx.fillRect(canvaW, 0, 200, canvaH);
 
     ctx.fillStyle = 'white';
+    //rysujemy punktację
     ctx.font = "30px Arial";
     ctx.fillText("Punkty:", canvaW + 20, 50);
     ctx.fillText(points, canvaW + 20, 80);
+    //rysujemy numer poziomu
     ctx.fillText("Poziom:", canvaW + 20, 130);
     ctx.fillText("1", canvaW + 20, 160);
+    //rysujemy ilość pozostałych kul
     ctx.fillText("Kule:", canvaW + 20, 210);
     if (ballCount == 3) {
 
@@ -201,10 +224,12 @@ function drawPaddlePlayer() {
     ctx.fillRect(playerRect.position.X, playerRect.position.Y, playerRect.size.width, playerRect.size.height);
 }
 
+//event mouse move dla ustalenia pozycji myszki
 canva.addEventListener("mousemove", playserPositon);
 function playserPositon(event) {
     playerRect.position.X = event.clientX - canva.offsetLeft - playerRect.size.width / 2;
-
+    mousePosition.position.X = event.clientX - canva.offsetLeft;
+    mousePosition.position.Y = event.clientY - canva.offsetTop;
     //jeżeli paletka chce wyjechać za canve od dołu ustawiamy wysokość na (canvaH - paddleH)
     if (playerRect.position.X >= canvaW - playerRect.size.width) {
         playerRect.position.X = canvaW - playerRect.size.width;
@@ -215,61 +240,331 @@ function playserPositon(event) {
         playerRect.position.X = 0;
     }
 }
-var stop = false;
+
+//ctx.scale(4, 4);
+
+
+//ctx.scale(0.8, 0.8);
+//funkcja rozpoczynająca grę
 function game() {
     if (!stop) {
+        zmiana = false;
+        ctx.clearRect(0, 0, canva.width, canva.height);
         drawTable();
         drawTableRight();
         drawBall();
         drawRect();
         drawPaddlePlayer();
         detectCollision();
+        drwaTbalePoint();
+    }
+    else if (firstScreen) {
+        zmiana = false;
+        ctx.clearRect(0, 0, canva.width, canva.height);
+
+        drawTable();
+        drawTableRight();
+        drawBall();
+        drawRect();
+        drawPaddlePlayer();
+        detectCollision();
+        drwaTbalePoint();
+
+        ctx.fillStyle = 'white';
+        ctx.font = '130px sefri';
+        ctx.fillText('PINOID', 130, 280);
+
+        //POZIOM
+        if (mousePosition.position.X >= easy.x && mousePosition.position.X <= easy.x + easy.w
+            && mousePosition.position.Y >= easy.y && mousePosition.position.Y <= easy.y + easy.h) {
+
+            ctx.fillStyle = "white";
+            roundRect(ctx, easy.x, easy.y, easy.w, easy.h, 20, true);
+
+            ctx.fillStyle = 'black';
+            ctx.font = '60px sefri';
+            ctx.fillText('ŁATWY', 250, 440);
+        }
+        else {
+            ctx.fillStyle = 'white';
+            ctx.font = '60px sefri';
+            ctx.fillText('ŁATWY', 250, 440);
+        }
+
+        if (mousePosition.position.X >= normal.x && mousePosition.position.X <= normal.x + normal.w
+            && mousePosition.position.Y >= normal.y && mousePosition.position.Y <= normal.y + normal.h) {
+
+            ctx.fillStyle = "white";
+            roundRect(ctx, normal.x, normal.y, normal.w, normal.h, 20, true);
+
+            ctx.fillStyle = 'black';
+            ctx.font = '60px sefri';
+            ctx.fillText('NORMALNY', 175, 510);
+        }
+        else {
+            ctx.fillStyle = 'white';
+            ctx.font = '60px sefri';
+            ctx.fillText('NORMALNY', 175, 510);
+        }
+
+        if (mousePosition.position.X >= hard.x && mousePosition.position.X <= hard.x + hard.w
+            && mousePosition.position.Y >= hard.y && mousePosition.position.Y <= hard.y + hard.h) {
+
+            ctx.fillStyle = "white";
+            roundRect(ctx, hard.x, hard.y, hard.w, hard.h, 20, true);
+
+            ctx.fillStyle = 'black';
+            ctx.font = '60px sefri';
+            ctx.fillText('TRUDNY', 225, 580);
+        }
+        else {
+            ctx.fillStyle = 'white';
+            ctx.font = '60px sefri';
+            ctx.fillText('TRUDNY', 225, 580);
+        }
     }
 }
 
+easy = {
+    x: 240,
+    y: 390,
+    w: 225,
+    h: 60
+};
+
+normal = {
+    x: 165,
+    y: 460,
+    w: 365,
+    h: 60
+};
+
+hard = {
+    x: 215,
+    y: 530,
+    w: 268,
+    h: 60
+};
+
+/**
+ * Draws a rounded rectangle using the current state of the canvas.
+ * If you omit the last three params, it will draw a rectangle
+ * outline with a 5 pixel border radius
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Number} x The top left x coordinate
+ * @param {Number} y The top left y coordinate
+ * @param {Number} width The width of the rectangle
+ * @param {Number} height The height of the rectangle
+ * @param {Number} [radius = 5] The corner radius; It can also be an object 
+ *                 to specify different radii for corners
+ * @param {Number} [radius.tl = 0] Top left
+ * @param {Number} [radius.tr = 0] Top right
+ * @param {Number} [radius.br = 0] Bottom right
+ * @param {Number} [radius.bl = 0] Bottom left
+ * @param {Boolean} [fill = false] Whether to fill the rectangle.
+ * @param {Boolean} [stroke = true] Whether to stroke the rectangle.
+ */
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+    if (typeof stroke == 'undefined') {
+        stroke = true;
+    }
+    if (typeof radius === 'undefined') {
+        radius = 5;
+    }
+    if (typeof radius === 'number') {
+        radius = { tl: radius, tr: radius, br: radius, bl: radius };
+    } else {
+        var defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
+        for (var side in defaultRadius) {
+            radius[side] = radius[side] || defaultRadius[side];
+        }
+    }
+    ctx.beginPath();
+    ctx.moveTo(x + radius.tl, y);
+    ctx.lineTo(x + width - radius.tr, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+    ctx.lineTo(x + width, y + height - radius.br);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+    ctx.lineTo(x + radius.bl, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+    ctx.lineTo(x, y + radius.tl);
+    ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+    ctx.closePath();
+    if (fill) {
+        ctx.fill();
+    }
+    if (stroke) {
+        ctx.stroke();
+    }
+
+}
+
+//click event listener
+canva.addEventListener('click', restartGame, false);
+
+//function watch if user click to restart (only when variable stopGame is true)
+function restartGame(e) {
+    var p = getMousePos(e);
+    //if (!stop)
+    //    return;
+    if (p.x >= easy.x && p.x <= easy.x + easy.w &&
+        p.y >= easy.y && p.y <= easy.y + easy.h) {
+
+        ballCount = 3;
+        points = 0;
+        setAllRectVisible();
+
+        firstScreen = false;
+        stop = false;
+    }
+    else if (p.x >= normal.x && p.x <= normal.x + normal.w &&
+        p.y >= normal.y && p.y <= normal.y + normal.h) {
+
+        ballCount = 3;
+        points = 0;
+        setAllRectVisible();
+
+        firstScreen = false;
+        stop = false;
+        ballSpeedX = 6;
+        ballSpeedY = 6;
+    }
+    else if (p.x >= hard.x && p.x <= hard.x + hard.w &&
+        p.y >= hard.y && p.y <= hard.y + hard.h) {
+
+        ballCount = 3;
+        points = 0;
+        setAllRectVisible();
+
+        firstScreen = false;
+        stop = false;
+        ballSpeedX = 8;
+        ballSpeedY = 8;
+    }
+}
+
+//function returns mouse position
+function getMousePos(e) {
+    var r = canva.getBoundingClientRect();
+    return {
+        x: e.clientX - r.left,
+        y: e.clientY - r.top
+    };
+}
+
+//funkcja rysuje punkty na stole po zniszczeniu prostokąta
+function drwaTbalePoint() {
+    if (rectPointArray != null) {
+        for (var i = 0; i < rectPointArray.length; i++) {
+            if (rectPointArray[i].elapsedTime > 0) {
+                ctx.font = "bold 16px Arial";
+                ctx.fillStyle = 'white';
+                ctx.fillText("+ " + rectPointArray[i].amount, rectPointArray[i].X, rectPointArray[i].Y);
+                rectPointArray[i].elapsedTime -= 1;
+            }
+            else {
+                rectPointArray.splice(i, 1);
+            }
+        }
+    }
+}
+
+function setAllRectVisible() {
+    for (var i = 0; i < rectArray.length; i++) {
+        for (var j = 0; j < rectArray[i].length; j++) {
+            rectArray[i][j].Visibility = true;
+        }
+    }
+}
+
+//funkcja wykrywająca kolizje pomiędzy kulą, a prostokątami
 function detectCollision() {
+    //jeżeli 'anyVisible' zostało ustawione na true oznacza to, że pozostały jeszcze jakieś elementy do zbicia i gra ma być kontynuowana. W przeciwnym wypadku grę zatrzymujemy.
     let anyVisible = false;
+    //wykrywamy kolizję prostokątów, czy któryś został zbity
     for (var i = 0; i < rectArray.length; i++) {
         for (var j = 0; j < rectArray[i].length; j++) {
             if (rectArray[i][j].Visibility) {
                 anyVisible = true;
                 rectArray[i][j].Visibility = !collisionCheckCircleRect(circle, rectArray[i][j]);
-                if(!rectArray[i][j].Visibility)
-                {
-                    if (rectArray[i][j].color == arrayColors[0])
-                    { points += ColorEnum.green;}
-                    else if (rectArray[i][j].color == arrayColors[1])
-                    { points += ColorEnum.red; }
-                    else if (rectArray[i][j].color == arrayColors[2])
-                    { points += ColorEnum.yellow; }
-                    else if (rectArray[i][j].color == arrayColors[3])
-                    { points += ColorEnum.blue; }
-                    else if (rectArray[i][j].color == arrayColors[4])
-                    { points += ColorEnum.purple; }
-                    else if (rectArray[i][j].color == arrayColors[5])
-                    { points += ColorEnum.pink; }
+                if (!rectArray[i][j].Visibility) {
+                    if (rectArray[i][j].color == arrayColors[0]) {
+                        points += ColorEnum.green;
+                        rectPointArray.push(new TablePoint(rectArray[i][j].position.X, rectArray[i][j].position.Y, ColorEnum.green));
+                    }
+                    else if (rectArray[i][j].color == arrayColors[1]) {
+                        points += ColorEnum.red;
+                        rectPointArray.push(new TablePoint(rectArray[i][j].position.X, rectArray[i][j].position.Y, ColorEnum.red));
+                    }
+                    else if (rectArray[i][j].color == arrayColors[2]) {
+                        points += ColorEnum.yellow;
+                        rectPointArray.push(new TablePoint(rectArray[i][j].position.X, rectArray[i][j].position.Y, ColorEnum.yellow));
+                    }
+                    else if (rectArray[i][j].color == arrayColors[3]) {
+                        points += ColorEnum.blue;
+                        rectPointArray.push(new TablePoint(rectArray[i][j].position.X, rectArray[i][j].position.Y, ColorEnum.blue));
+                    }
+                    else if (rectArray[i][j].color == arrayColors[4]) {
+                        points += ColorEnum.purple;
+                        rectPointArray.push(new TablePoint(rectArray[i][j].position.X, rectArray[i][j].position.Y, ColorEnum.purple));
+                    }
+                    else if (rectArray[i][j].color == arrayColors[5]) {
+                        points += ColorEnum.pink;
+                        rectPointArray.push(new TablePoint(rectArray[i][j].position.X, rectArray[i][j].position.Y, ColorEnum.pink));
+                    }
 
                 }
             }
         }
     }
+
+    //sprawdzamy kolizję paletki
     collisionCheckCircleRect(circle, playerRect);
 
     //anyVisible - jeśli ustawione na false, oznacza to ze żaden element nie jest już widoczny (zwycięstwo gracza)
     if (!anyVisible) {
         stop = true;
+
+        ctx.lineWidth = 22;
+        let grd1 = ctx.createRadialGradient(350.000, 350.000, 0.000, 350.000, 350.000, 350.000);
+
+        // Add colors
+        grd1.addColorStop(0.000, 'rgba(255, 255, 0, 1.000)');
+        grd1.addColorStop(1.000, 'rgba(255, 170, 86, 1.000)');
+        ctx.strokeStyle = grd1;
+
+        var path2 = new Path2D(winPath[0]);
+        ctx.stroke(path2);
+        path2 = new Path2D(winPath[1]);
+        ctx.stroke(path2);
+        path2 = new Path2D(winPath[2]);
+        ctx.stroke(path2);
+        path2 = new Path2D(winPath[3]);
+        ctx.stroke(path2);
+        path2 = new Path2D(winPath[4]);
+        ctx.stroke(path2);
+        path2 = new Path2D(winPath[5]);
+        ctx.stroke(path2);
+
+
+        ctx.font = "bold 66px Arial";
+        ctx.fillStyle = 'rgba(255, 255, 0, 1.000)';
+        ctx.fillText("ZWYCIĘSTWO", 120, 580);
+
+        ctx.lineWidth = 1;
     }
 }
 
-rectArray = createArray(6, 10);
-//drawRect();
-setInterval(game, 1000 / 100);
+let zmiana = false;
 
 //początek gry
-function startgame(difficult) {
-    let modalclass = document.getElementsByClassName('modal');
-    modalclass[0].style.display = "none";
-}
+setInterval(game, 1000 / 60);
+
+////początek gry
+//function startgame(difficult) {
+//    let modalclass = document.getElementsByClassName('modal');
+//    modalclass[0].style.display = "none";
+//}
 
 //funkcja sprawdzająca kolizje
 function collisionCheckCircleRect(circle, rect) {
@@ -285,20 +580,50 @@ function collisionCheckCircleRect(circle, rect) {
     }
 
     if (distX <= (rect.size.width / 2)) {
-        ballSpeedY = -ballSpeedY;
-        //console.log("a");
+        //console.log("1");
+        //stop = true;
+        if (!zmiana) {
+            ballSpeedY = -ballSpeedY;
+            zmiana = true;
+        }
         return true;
     }
     if (distY <= (rect.size.height / 2)) {
-        ballSpeedX = -ballSpeedX;
-        //console.log("b");
+        //console.log("2");
+        //stop = true;
+        if (!zmiana) {
+            ballSpeedX = -ballSpeedX;
+            zmiana = true;
+        }
         return true;
     }
 
     var dx = distX - rect.size.width / 2;
     var dy = distY - rect.size.height / 2;
-    return (dx * dx + dy * dy <= (circle.r * circle.r));
+    if (dx * dx + dy * dy <= (circle.r * circle.r)) {
+        console.log("3");
+        //stop = true;
+
+        if (!zmiana) {
+            ballSpeedX = -ballSpeedX;
+            zmiana = true;
+        }
+        return true;
+    }
+    else {
+        return false;
+    }
 }
+
+document.addEventListener('keydown', function (event) {
+    //console.log(event.keyCode);
+    if (event.keyCode == 68) {
+        if (!stop)
+            stop = true;
+        else
+            stop = false;
+    }
+});
 
 //klasa reprezentująca obiekt panelu, który ma zostać "zniszczony" przez piłkę
 function Panel(x, y, width, height, color) {
@@ -320,4 +645,12 @@ function _point(x, y) {
 function _size(width, height) {
     this.width = width;
     this.height = height;
+}
+
+//class tell us where is start point of element
+function TablePoint(x, y, amount) {
+    this.X = x + 12;
+    this.Y = y + 16;
+    this.amount = amount;
+    this.elapsedTime = 200;
 }

@@ -1,24 +1,11 @@
-﻿/* The Modal (background) */
-.modal {
-    margin: 0px;
-    display: block; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
-    padding-top: 0px; /* Location of the box */
-    padding-left: 0px; /* Location of the box */
-    width: 100%; /*Full width*/
-    height: 100%; /* Full height */
-    background-color: rgba(0, 0, 0, 0.75);
-}
-
-body {
+﻿body {
     margin: 0;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    background-color: darkgray;
+    background-color: #303030;
 }
 
 .difficult {
@@ -60,7 +47,3 @@ canvas {
     margin: auto;
     overflow: auto;
 }
-
-    .level_screen:hover {
-        transform: scale(1.2);
-    }
