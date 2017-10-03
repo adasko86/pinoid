@@ -36,8 +36,23 @@ var rectArray = null;
 //tablica punktów do pokazania na stole
 var rectPointArray = new Array(0);
 
-////ukrywanie kursora, żeby nie był widoczny na canvie
-//document.getElementById('can').style.cursor = "none";
+//keyDown code. Kiedy naciśniemy strzałkę na klawiaturze to wpisujemy tam kod tej strzałki. Gry podnosimy palec z klawisza i anstępuje keyUp to ustawiamy -1;
+let keyDownCode = -1;
+
+// Create gradient
+grd = ctx.createLinearGradient(0.000, 0.000, canvaW, canvaH);
+
+// Add colors
+grd.addColorStop(0.000, 'rgba(178, 178, 178, 1.000)');
+grd.addColorStop(0.998, 'rgba(0, 0, 0, 0.792)');
+
+//koordynaty gwiazdek pokazywanych po zwycięstwie
+let winPath = ['m197.084991,305.50278l25.973885,0l8.02613,-22.918036l8.026135,22.918036l25.973881,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm196.084991,153.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm311.084991,229.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm427.084991,306.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm312.084991,383.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
+                'm425.084991,152.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z'];
 
 //piłeczka
 var circle = {
@@ -137,40 +152,22 @@ function drawRect() {
                 ctx.strokeStyle = "white";
                 ctx.lineWidth = 2;
                 ctx.fillStyle = p.color;
-                //ctx.stroke();
 
                 roundRect(ctx, p.position.X, p.position.Y, p.size.width, p.size.height, 8, true);
-                //ctx.fillRect(p.position.X, p.position.Y, p.size.width, p.size.height);
-                //ctx.strokeRect(p.position.X, p.position.Y, p.size.width, p.size.height);
             }
 
         }
     }
 }
-// Create gradient
-grd = ctx.createLinearGradient(0.000, 0.000, canvaW, canvaH);
 
-// Add colors
-grd.addColorStop(0.000, 'rgba(178, 178, 178, 1.000)');
-grd.addColorStop(0.998, 'rgba(0, 0, 0, 0.792)');
-
-
-let winPath = ['m197.084991,305.50278l25.973885,0l8.02613,-22.918036l8.026135,22.918036l25.973881,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
-                'm196.084991,153.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
-                'm311.084991,229.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
-                'm427.084991,306.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
-                'm312.084991,383.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z',
-                'm425.084991,152.50278l25.973885,0l8.026131,-22.918036l8.026135,22.918036l25.97388,0l-21.013276,14.163963l8.026546,22.918036l-21.013285,-14.164349l-21.013281,14.164349l8.026548,-22.918036l-21.013283,-14.163963z'];
-
-//rysowanie stołu i lini środkowej
+//rysowanie stołu
 function drawTable() {
-
     // Fill with gradient
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, canvaW, canvaH);
 }
 
-//rysowanie stołu i lini środkowej
+//rysowanie prostokąta z prawej strony z liczbbą punktów etc.
 function drawTableRight() {
     //rysujemy "menu" po prawej stronie stołu
     ctx.fillStyle = 'gray';
@@ -220,6 +217,28 @@ function drawTableRight() {
 
 //rysowanie paletki gracza
 function drawPaddlePlayer() {
+    if (keyDownCode != -1) {
+        if (keyDownCode == 37) {
+            //lewa strzałka
+            playerRect.position.X -= 9;
+
+            //jeżeli paletka chce wyjechać za canve z lewej strony, to usatwiamy szerokość na 0 
+            if (playerRect.position.X <= 0) {
+                playerRect.position.X = 0;
+            }
+        }
+        else if (keyDownCode == 39) {
+            //prawa strzałka
+            playerRect.position.X += 9;
+
+            //jeżeli paletka chce wyjechać za canve z prawej strony, to usatwiamy szerokość canvaW - playerRect.size.width
+            if (playerRect.position.X >= canvaW - playerRect.size.width) {
+                playerRect.position.X = canvaW - playerRect.size.width;
+            }
+        }
+    }
+
+    //rysowanie paletki
     ctx.fillStyle = 'lightgreen';
     ctx.fillRect(playerRect.position.X, playerRect.position.Y, playerRect.size.width, playerRect.size.height);
 }
@@ -230,24 +249,22 @@ function playserPositon(event) {
     playerRect.position.X = event.clientX - canva.offsetLeft - playerRect.size.width / 2;
     mousePosition.position.X = event.clientX - canva.offsetLeft;
     mousePosition.position.Y = event.clientY - canva.offsetTop;
-    //jeżeli paletka chce wyjechać za canve od dołu ustawiamy wysokość na (canvaH - paddleH)
+
+    //jeżeli paletka chce wyjechać za canve z lewej strony, to usatwiamy szerokość na 0 
     if (playerRect.position.X >= canvaW - playerRect.size.width) {
         playerRect.position.X = canvaW - playerRect.size.width;
     }
 
-    //jeżeli paletka chce wyjechać za canve od góry usatwiamy wysokość na 0
+    //jeżeli paletka chce wyjechać za canve z prawej strony, to usatwiamy szerokość canvaW - playerRect.size.width
     if (playerRect.position.X <= 0) {
         playerRect.position.X = 0;
     }
 }
 
-//ctx.scale(4, 4);
-
-
-//ctx.scale(0.8, 0.8);
 //funkcja rozpoczynająca grę
 function game() {
     if (!stop) {
+        //początek gry
         zmiana = false;
         ctx.clearRect(0, 0, canva.width, canva.height);
         drawTable();
@@ -259,6 +276,7 @@ function game() {
         drwaTbalePoint();
     }
     else if (firstScreen) {
+        //gra podczas wyboru poziomu trudności
         zmiana = false;
         ctx.clearRect(0, 0, canva.width, canva.height);
 
@@ -270,11 +288,12 @@ function game() {
         detectCollision();
         drwaTbalePoint();
 
+        //Napis PINOID
         ctx.fillStyle = 'white';
         ctx.font = '130px sefri';
         ctx.fillText('PINOID', 130, 280);
 
-        //POZIOM
+        //POZIOM trudności
         if (mousePosition.position.X >= easy.x && mousePosition.position.X <= easy.x + easy.w
             && mousePosition.position.Y >= easy.y && mousePosition.position.Y <= easy.y + easy.h) {
 
@@ -405,8 +424,7 @@ canva.addEventListener('click', restartGame, false);
 //function watch if user click to restart (only when variable stopGame is true)
 function restartGame(e) {
     var p = getMousePos(e);
-    //if (!stop)
-    //    return;
+
     if (p.x >= easy.x && p.x <= easy.x + easy.w &&
         p.y >= easy.y && p.y <= easy.y + easy.h) {
 
@@ -469,6 +487,7 @@ function drwaTbalePoint() {
     }
 }
 
+//ustawia wszystkie prostokąty na widoczne (ma zastosowanie na początku gry)
 function setAllRectVisible() {
     for (var i = 0; i < rectArray.length; i++) {
         for (var j = 0; j < rectArray[i].length; j++) {
@@ -555,16 +574,11 @@ function detectCollision() {
     }
 }
 
+//zmienna wykorzystywana podczas detekcji kolizji
 let zmiana = false;
 
 //początek gry
 setInterval(game, 1000 / 60);
-
-////początek gry
-//function startgame(difficult) {
-//    let modalclass = document.getElementsByClassName('modal');
-//    modalclass[0].style.display = "none";
-//}
 
 //funkcja sprawdzająca kolizje
 function collisionCheckCircleRect(circle, rect) {
@@ -580,8 +594,6 @@ function collisionCheckCircleRect(circle, rect) {
     }
 
     if (distX <= (rect.size.width / 2)) {
-        //console.log("1");
-        //stop = true;
         if (!zmiana) {
             ballSpeedY = -ballSpeedY;
             zmiana = true;
@@ -589,8 +601,6 @@ function collisionCheckCircleRect(circle, rect) {
         return true;
     }
     if (distY <= (rect.size.height / 2)) {
-        //console.log("2");
-        //stop = true;
         if (!zmiana) {
             ballSpeedX = -ballSpeedX;
             zmiana = true;
@@ -602,7 +612,6 @@ function collisionCheckCircleRect(circle, rect) {
     var dy = distY - rect.size.height / 2;
     if (dx * dx + dy * dy <= (circle.r * circle.r)) {
         console.log("3");
-        //stop = true;
 
         if (!zmiana) {
             ballSpeedX = -ballSpeedX;
@@ -615,14 +624,22 @@ function collisionCheckCircleRect(circle, rect) {
     }
 }
 
+//event reagujący na przyciśnięcie przycisku na klawiaturze
 document.addEventListener('keydown', function (event) {
-    //console.log(event.keyCode);
     if (event.keyCode == 68) {
         if (!stop)
             stop = true;
         else
             stop = false;
     }
+    else if (event.keyCode == 37 || event.keyCode == 39) {
+        keyDownCode = event.keyCode;
+    }
+});
+
+//event reagujący na podniesienia palca z klawiatury (ustawiamy wtedy zmienną keyDownCode na -1)
+document.addEventListener('keyup', function (event) {
+    keyDownCode = -1;
 });
 
 //klasa reprezentująca obiekt panelu, który ma zostać "zniszczony" przez piłkę
